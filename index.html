@@ -7,6 +7,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Library to read .docx files -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+    <!-- Library to read .pdf files -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
+    <script>pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.worker.min.js`;</script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         body {
@@ -75,8 +78,8 @@
                             <svg class="mx-auto h-12 w-12 text-slate-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
                                 <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
                             </svg>
-                            <p class="mt-4 text-slate-500">Dra og slipp .docx-filer her, eller</p>
-                            <input type="file" id="file-input" multiple accept=".docx" class="hidden">
+                            <p class="mt-4 text-slate-500">Dra og slipp .docx eller .pdf-filer her, eller</p>
+                            <input type="file" id="file-input" multiple accept=".docx,.pdf" class="hidden">
                             <button onclick="document.getElementById('file-input').click()" class="mt-4 bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition">
                                 Velg Filer
                             </button>
@@ -133,7 +136,7 @@
         dropZone.addEventListener('drop', (e) => {
             e.preventDefault();
             dropZone.classList.remove('dragover');
-            const newFiles = Array.from(e.dataTransfer.files).filter(f => f.name.endsWith('.docx'));
+            const newFiles = Array.from(e.dataTransfer.files).filter(f => f.name.endsWith('.docx') || f.name.endsWith('.pdf'));
             handleFiles(newFiles);
         });
         fileInput.addEventListener('change', () => { handleFiles(Array.from(fileInput.files)); });
@@ -162,7 +165,6 @@
 
         // --- Daily Limit Logic ---
         const DAILY_LIMIT = 10;
-
         function getUsage() {
             const today = new Date().toISOString().split('T')[0];
             const usage = JSON.parse(localStorage.getItem('apiUsage')) || {};
@@ -171,13 +173,11 @@
             }
             return usage;
         }
-
         function updateUsageDisplay() {
             const usage = getUsage();
             const remaining = DAILY_LIMIT - usage.count;
             usageCounterDiv.textContent = `Du har ${remaining} analyser igjen i dag.`;
         }
-
         function checkUsageLimit() {
             let usage = getUsage();
             if (usage.count >= DAILY_LIMIT) {
@@ -190,13 +190,25 @@
             return true;
         }
 
-        // --- Processing Logic ---
+        // --- File Reading Logic ---
+        async function readPdfAsText(arrayBuffer) {
+            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+            let textContent = '';
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const text = await page.getTextContent();
+                textContent += text.items.map(item => item.str).join(' ');
+            }
+            return textContent;
+        }
+        function readDocxAsText(arrayBuffer) {
+            return mammoth.extractRawText({ arrayBuffer }).then(result => result.value);
+        }
+
+        // --- Main Processing Logic ---
         processBtn.addEventListener('click', async () => {
             if (filesToProcess.length === 0) return;
-            
-            if (!checkUsageLimit()) {
-                return; // Stop if limit is reached
-            }
+            if (!checkUsageLimit()) return;
 
             processingFeedback.classList.remove('hidden');
             processButtonContainer.classList.add('hidden');
@@ -205,7 +217,12 @@
             let combinedText = "";
             for (const file of filesToProcess) {
                 const arrayBuffer = await file.arrayBuffer();
-                const text = await readFileAsText(arrayBuffer);
+                let text = '';
+                if (file.name.endsWith('.docx')) {
+                    text = await readDocxAsText(arrayBuffer);
+                } else if (file.name.endsWith('.pdf')) {
+                    text = await readPdfAsText(arrayBuffer);
+                }
                 combinedText += text + "\n\n--- NEW DOCUMENT ---\n\n";
             }
 
@@ -221,10 +238,6 @@
                 processButtonContainer.classList.remove('hidden');
             }
         });
-
-        function readFileAsText(arrayBuffer) {
-            return mammoth.extractRawText({ arrayBuffer }).then(result => result.value);
-        }
 
         async function callGeminiToParse(text) {
             const apiKey = "AIzaSyAfe7f48N1x_FDU0nl1sW3z4lH0MRzilXU"; 
@@ -246,7 +259,7 @@
                 }
             };
 
-            const systemPrompt = `You are a highly accurate data extraction tool. Your task is to analyze the provided invoice text, identify every single line item, and extract the specified data points. Also, identify any associated fees on the next line (like 'CO2 Avgift' or 'Miljøgebyr') and create separate line items for them, linking them to the parent item's date, quantity, and unit. You MUST return the data as a valid JSON array matching the provided schema. Do not return anything else.`;
+            const systemPrompt = `You are a highly accurate data extraction tool for SAR invoices. Your task is to analyze the provided invoice text, identify every single line item, and extract the specified data points. Also, identify any associated fees on the next line (like 'CO2 Avgift' or 'Miljøgebyr') and create separate line items for them, linking them to the parent item's date. You MUST return the data as a valid JSON array matching the provided schema. Do not return anything else.`;
             const userQuery = `Extract all invoice line items from the following text:\n\n${text}`;
 
             const payload = {
@@ -340,6 +353,17 @@
             }
             summaryHtml += `</div>`;
 
+            const notesHtml = `
+                <section class="mt-8 bg-gray-50 p-6 rounded-lg border">
+                    <h3 class="font-semibold text-gray-800 mb-2">Merknader</h3>
+                    <p class="text-sm text-gray-600 mb-2">
+                        <strong>Vedrørende Norsk CO2-avgift:</strong> Denne rapporten inkluderer en lovpålagt CO2-avgift fra norske myndigheter på alt avfall som går til forbrenning. Fra 1. januar 2024 ble denne avgiften betydelig økt for å fremme økt kildesortering og gjenvinning.
+                    </p>
+                    <p class="text-sm text-gray-600">
+                        <strong>Vedrørende prising av skrapmetall:</strong> Prisen for metallavfall er basert på markedsverdi. I motsetning til restavfall, som medfører en behandlingskostnad, er skrapmetall en resirkulerbar vare. Prisen reflekterer markedsverdi fratrukket kostnader for innsamling, transport og behandling.
+                    </p>
+                </section>`;
+
             const fullReportHtml = `
                 <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-8 sm:p-12">
                     <header class="flex justify-between items-start pb-8 border-b">
@@ -356,14 +380,15 @@
                             </div>
                         </div>
                     </header>
-                    <section class="mt-8 flex justify-between items-start">
-                        <div class="w-1/2">
+                    <section class="mt-8 flex flex-col md:flex-row justify-between items-start gap-8">
+                        <div class="w-full md:w-1/2">
                             <h3 class="font-semibold text-gray-800">Client:</h3>
                             <p class="text-gray-600">Saipem</p>
                             <p class="text-gray-600">[Saipem's Address]</p>
                         </div>
-                        <div class="w-1/2 bg-gray-50 p-6 rounded-lg border">${summaryHtml}</div>
+                        <div class="w-full md:w-1/2 bg-gray-50 p-6 rounded-lg border">${summaryHtml}</div>
                     </section>
+                    ${notesHtml}
                     <section class="mt-10">
                         <h3 class="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">Detailed Breakdown</h3>
                         <div class="overflow-x-auto">
@@ -392,3 +417,4 @@
     </script>
 </body>
 </html>
+
