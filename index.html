@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="no">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ASCO Faktura Sammenslåing (AI-drevet)</title>
+    <title>ASCO Invoice Consolidation (AI-Powered)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Library to read .docx files -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
@@ -59,8 +59,8 @@
     <div class="max-w-7xl mx-auto p-4 sm:p-8">
         <header class="text-center mb-10">
             <img src="https://www.ascoworld.com/uploads/ASCO-Logo-Small-1-1.png" alt="ASCO Logo" class="w-24 mx-auto mb-4">
-            <h1 class="text-4xl font-bold text-slate-800">AI-drevet Verktøy for Kostnadsoversikt</h1>
-            <p class="text-slate-600 mt-2 text-lg">Transformer dine fakturaer til en interaktiv rapport på sekunder.</p>
+            <h1 class="text-4xl font-bold text-slate-800">AI-Powered Cost Overview Tool</h1>
+            <p class="text-slate-600 mt-2 text-lg">Transform your invoices into an interactive report in seconds.</p>
         </header>
 
         <main>
@@ -73,30 +73,30 @@
                     </div>
                     <!-- Right Column: Upload -->
                     <div>
-                        <h2 class="text-2xl font-semibold text-slate-700 mb-4">Start her</h2>
+                        <h2 class="text-2xl font-semibold text-slate-700 mb-4">Start Here</h2>
                         <div id="drop-zone" class="w-full p-8 text-center rounded-lg bg-slate-50">
                             <svg class="mx-auto h-12 w-12 text-slate-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
                                 <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
                             </svg>
-                            <p class="mt-4 text-slate-500">Dra og slipp .docx eller .pdf-filer her, eller</p>
+                            <p class="mt-4 text-slate-500">Drag and drop .docx or .pdf files here, or</p>
                             <input type="file" id="file-input" multiple accept=".docx,.pdf" class="hidden">
                             <button onclick="document.getElementById('file-input').click()" class="mt-4 bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition">
-                                Velg Filer
+                                Select Files
                             </button>
                             <div id="file-list" class="mt-4 text-sm text-slate-700"></div>
                         </div>
                         <div id="processing-feedback" class="text-center mt-6 hidden">
                             <div class="spinner mx-auto"></div>
-                            <p class="text-slate-600 mt-2">AI-en analyserer dokumentene dine. Dette kan ta et øyeblikk...</p>
+                            <p class="text-slate-600 mt-2">The AI is analyzing your documents. This might take a moment...</p>
                         </div>
                         <div id="process-button-container" class="text-center mt-6">
                             <button id="process-btn" class="w-full bg-green-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-green-700 transition disabled:bg-gray-400 text-lg" disabled>
-                                ✨ Generer Oversikt med AI
+                                ✨ Generate Overview with AI
                             </button>
                             <div id="usage-counter" class="text-sm text-slate-500 mt-2"></div>
                         </div>
                          <div class="mt-4 text-center text-xs text-slate-400">
-                            🔒 All filbehandling skjer lokalt i din nettleser. Ingen data lastes opp til en server.
+                            🔒 All file processing happens locally in your browser. No data is uploaded to a server.
                         </div>
                     </div>
                 </div>
@@ -105,9 +105,9 @@
             <!-- Report Output Section -->
             <section id="report-container" class="hidden">
                  <div class="flex justify-between items-center mb-4 no-print">
-                    <h2 class="text-2xl font-bold text-gray-800">Generert Oversikt</h2>
+                    <h2 class="text-2xl font-bold text-gray-800">Generated Overview</h2>
                     <button onclick="window.print()" class="bg-slate-700 text-white font-bold py-2 px-4 rounded-lg hover:bg-slate-800 transition">
-                        🖨️ Skriv ut til PDF
+                        🖨️ Print to PDF
                     </button>
                 </div>
                 <div id="report-output">
@@ -152,7 +152,7 @@
                 fileListDiv.innerHTML = '';
                 return;
             }
-            fileListDiv.innerHTML = '<p class="font-semibold mb-2">Valgte filer:</p>';
+            fileListDiv.innerHTML = '<p class="font-semibold mb-2">Selected files:</p>';
             const list = document.createElement('ul');
             list.className = 'list-disc list-inside text-left';
             filesToProcess.forEach(file => {
@@ -176,12 +176,12 @@
         function updateUsageDisplay() {
             const usage = getUsage();
             const remaining = DAILY_LIMIT - usage.count;
-            usageCounterDiv.textContent = `Du har ${remaining} analyser igjen i dag.`;
+            usageCounterDiv.textContent = `You have ${remaining} analyses remaining today.`;
         }
         function checkUsageLimit() {
             let usage = getUsage();
             if (usage.count >= DAILY_LIMIT) {
-                alert(`Du har nådd den daglige grensen på ${DAILY_LIMIT} analyser. Prøv igjen i morgen.`);
+                alert(`You have reached the daily limit of ${DAILY_LIMIT} analyses. Please try again tomorrow.`);
                 return false;
             }
             usage.count++;
@@ -232,7 +232,7 @@
                 reportContainer.classList.remove('hidden');
             } catch (error) {
                 console.error("Error processing with AI:", error);
-                alert("En feil oppstod under AI-analysen. Vennligst prøv igjen.");
+                alert("An error occurred during the AI analysis. Please try again.");
             } finally {
                 processingFeedback.classList.add('hidden');
                 processButtonContainer.classList.remove('hidden');
@@ -323,10 +323,10 @@
                         <tr>
                             <td class="p-3">${item.description}</td>
                             <td class="text-right p-3">${item.date}</td>
-                            <td class="text-right p-3">${(item.qty || 0).toLocaleString('nb-NO')}</td>
+                            <td class="text-right p-3">${(item.qty || 0).toLocaleString('en-US')}</td>
                             <td class="text-right p-3">${item.unit}</td>
                             <td class="text-right p-3">${(item.unitPrice || 0).toFixed(2)}</td>
-                            <td class="text-right p-3">${item.amount.toLocaleString('nb-NO', {minimumFractionDigits: 2})}</td>
+                            <td class="text-right p-3">${item.amount.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
                         </tr>`;
                     categorySubtotal += item.amount;
                 });
@@ -334,7 +334,7 @@
                 tableHtml += `
                     <tr class="border-b-2 border-gray-200">
                         <td colspan="5" class="text-right font-semibold p-3">Subtotal for ${category}</td>
-                        <td class="text-right font-semibold p-3">${categorySubtotal.toLocaleString('nb-NO', {minimumFractionDigits: 2})}</td>
+                        <td class="text-right font-semibold p-3">${categorySubtotal.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
                     </tr>`;
                 
                 totalNetAmount += categorySubtotal;
@@ -342,25 +342,25 @@
             }
 
             let summaryHtml = `<h3 class="font-bold text-gray-800 mb-4">Cost Summary</h3>`;
-            summaryHtml += `<div class="flex justify-between text-lg font-bold border-b pb-2 mb-2"><span>Total Net Amount</span><span>${totalNetAmount.toLocaleString('nb-NO', {minimumFractionDigits: 2})} NOK</span></div>`;
+            summaryHtml += `<div class="flex justify-between text-lg font-bold border-b pb-2 mb-2"><span>Total Net Amount</span><span>${totalNetAmount.toLocaleString('en-US', {minimumFractionDigits: 2})} NOK</span></div>`;
             summaryHtml += `<div class="space-y-1">`;
             for (const category of sortedCategories) {
                  summaryHtml += `
                     <div class="flex justify-between text-sm text-gray-600">
                         <span>${category}</span>
-                        <span>${categoryTotals[category].toLocaleString('nb-NO', {minimumFractionDigits: 2})} NOK</span>
+                        <span>${categoryTotals[category].toLocaleString('en-US', {minimumFractionDigits: 2})} NOK</span>
                     </div>`;
             }
             summaryHtml += `</div>`;
 
             const notesHtml = `
                 <section class="mt-8 bg-gray-50 p-6 rounded-lg border">
-                    <h3 class="font-semibold text-gray-800 mb-2">Merknader</h3>
+                    <h3 class="font-semibold text-gray-800 mb-2">Notes</h3>
                     <p class="text-sm text-gray-600 mb-2">
-                        <strong>Vedrørende Norsk CO2-avgift:</strong> Denne rapporten inkluderer en lovpålagt CO2-avgift fra norske myndigheter på alt avfall som går til forbrenning. Fra 1. januar 2024 ble denne avgiften betydelig økt for å fremme økt kildesortering og gjenvinning.
+                        <strong>Re: Norwegian CO2 Tax:</strong> This report includes a mandatory CO2 tax levied by the Norwegian Government on all waste destined for incineration. As of January 1, 2024, this tax was significantly increased to encourage more extensive source-sorting and recycling.
                     </p>
                     <p class="text-sm text-gray-600">
-                        <strong>Vedrørende prising av skrapmetall:</strong> Prisen for metallavfall er basert på markedsverdi. I motsetning til restavfall, som medfører en behandlingskostnad, er skrapmetall en resirkulerbar vare. Prisen reflekterer markedsverdi fratrukket kostnader for innsamling, transport og behandling.
+                        <strong>Re: Scrap Metal Pricing:</strong> The charge for "Mixed Metal Scrap" is calculated based on its commodity market value. Unlike residual waste, which incurs a disposal fee, scrap metal is a recyclable material. The price reflects the market rate less the costs associated with collection, processing, and logistics.
                     </p>
                 </section>`;
 
@@ -376,7 +376,7 @@
                         <div class="text-right">
                             <h2 class="text-2xl font-bold text-gray-800 uppercase tracking-wide">Cost Overview</h2>
                             <div class="mt-2 text-sm text-gray-600">
-                                <p><span class="font-semibold">Date:</span> ${new Date().toLocaleDateString('nb-NO')}</p>
+                                <p><span class="font-semibold">Date:</span> ${new Date().toLocaleDateString('en-US')}</p>
                             </div>
                         </div>
                     </header>
